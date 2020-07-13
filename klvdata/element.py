@@ -25,11 +25,17 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
-from klvdata.common import ber_encode
 
+from klvdata.common import ber_encode
+try:
+    from pydevd import *
+except ImportError:
+    None
 
 # Proposed alternate names, "BaseElement" of modules "bases".
-class Element(metaclass=ABCMeta):
+
+
+class Element():
     """Construct a key, length, value tuplet.
 
     Elements provide the basic mechanisms to constitute the basic encoding
@@ -45,6 +51,7 @@ class Element(metaclass=ABCMeta):
         name: If name is set return name, else return class name.
         length: Length is calculated based off value.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self, key, value):
         self.key = key
@@ -57,6 +64,8 @@ class Element(metaclass=ABCMeta):
     @property
     def length(self):
         """bytes: Return the BER encoded byte length of self.value."""
+        if self is None or self.value is None:
+            return 0
         return ber_encode(len(self))
 
     def __bytes__(self):
@@ -65,6 +74,8 @@ class Element(metaclass=ABCMeta):
 
     def __len__(self):
         """Return the byte length of self.value."""
+        if self.value is None:
+            return 0
         return len(bytes(self.value))
 
     @abstractmethod
@@ -76,13 +87,8 @@ class Element(metaclass=ABCMeta):
 
 
 class UnknownElement(Element):
+
     def __repr__(self):
         """Return as-code string used to re-create the object."""
         args = ', '.join(map(repr, (bytes(self.key), bytes(self.value))))
         return '{}({})'.format(self.__class__.__name__, args)
-
-
-
-
-
-

@@ -1,3 +1,39 @@
+Details @felipeservicos
+=======================
+This software is a fork of the great initiative of the paratech/klvdata project. The modules of klvdata in `QGIS`_ were modified by the `QGIS`_ project, which improved the way of popularizing the structure of the metadatalist(). So i'd like to thank Project QGIS too.
+.. _QGIS: https://github.com/All4Gis/QGISFMV#installation-on-ubuntu
+
+New Features @felipeservicos
+============================
+There is 2 new examples (in 'examples' folder):
+
+metadataToPickleData.py  
+-----------------------
+- This script receives as  command line parameter the name of the klvdata binary file and  writes a Pickle file(.pkl) preserving the python object for reuse.
+- This script ignore Unknown Elements that prevent its functioning
+
+Example:
+.. code-block:: console
+
+    $ ./metadataToPickleData.py <binary file extracted from .TS video>
+
+
+
+metadataToJson.py
+-----------------
+- This script receives as command line parameter the name of the klvdata binary file and writes a JSON file.
+- This script ignore Unknown Elements that prevent its functioning
+
+Example:
+.. code-block:: console
+
+    $ ./metadataToJson.py <binary file extracted from .TS video>
+
+
+
+** Notice: The first argument parameter maybe change if run script using python <name script> so perhaps you need change args[1] to args[2] in script.
+----------
+
 klvdata
 =======
 .. image:: https://travis-ci.org/paretech/klvdata.svg?branch=master

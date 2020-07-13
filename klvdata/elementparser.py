@@ -25,18 +25,25 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+
+from klvdata.common import (bytes_to_datetime,
+                                     bytes_to_float,
+                                     bytes_to_hexstr,
+                                     bytes_to_int,
+                                     bytes_to_str,
+                                     datetime_to_bytes,
+                                     float_to_bytes,
+                                     str_to_bytes,
+                                     ieee754_bytes_to_fp)
 from klvdata.element import Element
-from klvdata.common import bytes_to_datetime
-from klvdata.common import bytes_to_int
-from klvdata.common import bytes_to_float
-from klvdata.common import bytes_to_hexstr
-from klvdata.common import bytes_to_str
-from klvdata.common import datetime_to_bytes
-from klvdata.common import float_to_bytes
-from klvdata.common import str_to_bytes
+
+try:
+    from pydevd import *
+except ImportError:
+    None
 
 
-class ElementParser(Element, metaclass=ABCMeta):
+class ElementParser(Element):
     """Construct a Element Parser base class.
 
     Element Parsers are used to enforce the convention that all Element Parsers
@@ -48,6 +55,7 @@ class ElementParser(Element, metaclass=ABCMeta):
     their definitions (subclasses of Element Parser) do not need to call init
     on super with class key and instance value.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self, value):
         super().__init__(self.key, value)
@@ -63,8 +71,11 @@ class ElementParser(Element, metaclass=ABCMeta):
         return '{}({})'.format(self.name, bytes(self.value))
 
 
-class BaseValue(metaclass=ABCMeta):
+class BaseValue():
+    __metaclass__ = ABCMeta
+
     """Abstract base class (superclass) used to insure internal interfaces are maintained."""
+
     @abstractmethod
     def __bytes__(self):
         """Required by element.Element"""
@@ -76,14 +87,20 @@ class BaseValue(metaclass=ABCMeta):
         pass
 
 
-class BytesElementParser(ElementParser, metaclass=ABCMeta):
+class BytesElementParser(ElementParser):
+    __metaclass__ = ABCMeta
+
     def __init__(self, value):
         super().__init__(BytesValue(value))
 
 
 class BytesValue(BaseValue):
+
     def __init__(self, value):
-        self.value = value
+        try:
+            self.value = bytes_to_int(value)
+        except TypeError:
+            self.value = value
 
     def __bytes__(self):
         return bytes(self.value)
@@ -92,12 +109,15 @@ class BytesValue(BaseValue):
         return bytes_to_hexstr(self.value, start='0x', sep='')
 
 
-class DateTimeElementParser(ElementParser, metaclass=ABCMeta):
+class DateTimeElementParser(ElementParser):
+    __metaclass__ = ABCMeta
+
     def __init__(self, value):
         super().__init__(DateTimeValue(value))
 
 
 class DateTimeValue(BaseValue):
+
     def __init__(self, value):
         self.value = bytes_to_datetime(value)
 
@@ -108,12 +128,15 @@ class DateTimeValue(BaseValue):
         return self.value.isoformat(sep=' ')
 
 
-class StringElementParser(ElementParser, metaclass=ABCMeta):
+class StringElementParser(ElementParser):
+    __metaclass__ = ABCMeta
+
     def __init__(self, value):
         super().__init__(StringValue(value))
 
 
 class StringValue(BaseValue):
+
     def __init__(self, value):
         try:
             self.value = bytes_to_str(value)
@@ -124,10 +147,14 @@ class StringValue(BaseValue):
         return str_to_bytes(self.value)
 
     def __str__(self):
-        return str(self.value)
+        if self.value is not None:
+            return str(self.value)
+        return ""
 
 
-class MappedElementParser(ElementParser, metaclass=ABCMeta):
+class MappedElementParser(ElementParser):
+    __metaclass__ = ABCMeta
+
     def __init__(self, value):
         super().__init__(MappedValue(value, self._domain, self._range))
 
@@ -143,13 +170,16 @@ class MappedElementParser(ElementParser, metaclass=ABCMeta):
     def _range(cls):
         pass
 
+
 class MappedValue(BaseValue):
+
     def __init__(self, value, _domain, _range):
         self._domain = _domain
         self._range = _range
 
         try:
-            self.value = bytes_to_float(value, self._domain, self._range)
+            self.value = round(bytes_to_float(
+                value, self._domain, self._range), 4)
         except TypeError:
             self.value = value
 
@@ -157,11 +187,34 @@ class MappedValue(BaseValue):
         return float_to_bytes(self.value, self._domain, self._range)
 
     def __str__(self):
-        return format(self.value)
+        if self.value is not None:
+            return format(self.value)
+        return ""
 
     def __float__(self):
         return self.value
 
 
+class IEEE754ElementParser(ElementParser):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, value):
+        super().__init__(IEEE754Value(value))
 
 
+class IEEE754Value(BaseValue):
+
+    def __init__(self, value):
+        try:
+            self.value = ieee754_bytes_to_fp(value)
+        except TypeError:
+            self.value = value
+
+    def __bytes__(self):
+        # TODO
+        return ieee754_double_to_bytes(self.value)
+
+    def __str__(self):
+        if self.value is not None:
+            return str(self.value)
+        return ""

@@ -23,11 +23,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from struct import pack
-from struct import unpack
 from datetime import datetime
 from datetime import timezone
-from binascii import hexlify, unhexlify
+from struct import pack
+from struct import unpack
+
+try:
+    from pydevd import *
+except ImportError:
+    None
+
 
 def datetime_to_bytes(value):
     """Return bytes representing UTC time in microseconds."""
@@ -36,7 +41,7 @@ def datetime_to_bytes(value):
 
 def bytes_to_datetime(value):
     """Return datetime from microsecond bytes."""
-    return datetime.fromtimestamp(bytes_to_int(value)/1e6, tz=timezone.utc)
+    return datetime.fromtimestamp(bytes_to_int(value) / 1e6, tz=timezone.utc)
 
 
 def bytes_to_int(value, signed=False):
@@ -88,7 +93,8 @@ def str_to_bytes(value):
 
 
 def hexstr_to_bytes(value):
-    """Return bytes object and filter out formatting characters from a string of hexadecimal numbers."""
+    """Return bytes object and filter out formatting characters from
+    a string of hexadecimal numbers."""
     return bytes.fromhex(''.join(filter(str.isalnum, value)))
 
 
@@ -101,12 +107,9 @@ def linear_map(src_value, src_domain, dst_range):
     """Maps source value (src_value) in the source domain
     (source_domain) onto the destination range (dest_range) using linear
     interpretation.
-
     Except that at the moment src_value is a bytes value that once converted
     to integer that it then is on the src_domain.
-
     Ideally would like to move the conversion from bytes to int externally.
-
     Once value is same base and format as src_domain (i.e. converted from bytes),
     it should always fall within the src_domain. If not, that's a problem.
     """
@@ -129,6 +132,18 @@ def bytes_to_float(value, _domain, _range):
     """Convert the fixed point value self.value to a floating point value."""
     src_value = int().from_bytes(value, byteorder='big', signed=(min(_domain) < 0))
     return linear_map(src_value, _domain, _range)
+
+
+def ieee754_bytes_to_fp(value):
+    """Convert the fixed point value self.value to a ieee754 double point value."""
+    # src_value = int().from_bytes(value, byteorder='big', signed=False)
+    l = len(value)
+    if l == 4:
+        return unpack('>f', value)[0]
+    elif l == 8:
+        return unpack('>d', value)[0]
+    else:
+        raise ValueError
 
 
 def float_to_bytes(value, _domain, _range):
