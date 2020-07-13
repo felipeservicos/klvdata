@@ -1,7 +1,8 @@
 Details @felipeservicos
 =======================
-This software is a fork of the great initiative of the paratech/klvdata project. The modules of klvdata in `QGIS`_ were modified by the `QGIS`_ project, which improved the way of popularizing the structure of the metadatalist(). So i'd like to thank Project QGIS too.
-.. `QGIS`_: https://github.com/All4Gis/QGISFMV
+This software is a fork of the great initiative of the paratech/klvdata project. The modules of klvdata in QGIS_ were modified by the QGIS_ project, which improved the way of popularizing the structure of the metadatalist(). So i'd like to thank Project QGIS too.
+
+.. _QGIS: https://github.com/All4Gis/QGISFMV
 
 New Features @felipeservicos
 ============================
